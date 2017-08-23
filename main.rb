@@ -68,8 +68,18 @@ def modify_sources!
   end
 end
 
+def search_for_podcaster
+  @sources.map do |source|
+    Podcasts::FindPodcaster.find(source, @options[:find])
+  end.flatten.reject(&:empty?).each do |result|
+    result.each do |k,v|
+      puts "#{k.capitalize}: #{v}"
+    end
+    puts ""
+  end
+end
+
 load_data!
 parse_args!
 modify_sources! if @options[:sources]
-
-puts @options unless @options.empty?
+search_for_podcaster if @options[:find]
