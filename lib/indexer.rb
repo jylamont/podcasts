@@ -1,37 +1,56 @@
 module Podcasts
   class Indexer
-    def self.index!(db, source)
+    def self.index!(source)
+      new.index(source)
+    end
+
+    def index(source)
       # Parse out name per episode from source
       index = {}
-
-      t1 = Time.now
-      name_parser = Podcasts::NameParser.new
-
-      source.podcasts.each do |hash|
-        puts hash["title"]
-        names_from_title = name_parser.parse(hash["title"])
-        names_from_description = name_parser.parse(hash["description"])
-        index_names = (names_from_title & names_from_description)
-
-        unless index_names.empty?
-          new_hash = {
-            "podcast" => hash["podcast"],
-            "title" => hash["title"],
-            "link" => hash["link"]
-          }
+      
+      bm(source) do 
+        source.podcasts.each do |hash|
+          index_names = parse_names(hash)
+          next if index_names.empty?
 
           index_names.each do |name|  
             key = name.to_s
             index[key] ||= []
-            index[key] << new_hash
-          end
-        end        
+            index[key] << sanitized_podcast_hash(hash)
+          end      
+        end
       end
-
-      t2 = Time.now
-      puts "#{source.name}: Time = #{(t2 - t1).to_f}"
-
+      
       index
+    end
+
+    private
+
+    def bm(source, &block)
+      t1 = Time.now
+      result = block.call
+      t2 = Time.now
+
+      puts "#{source.name}: Time = #{(t2 - t1).to_f}"
+      result
+    end
+
+    def parse_names(hash)
+      names_from_title = name_parser.parse(hash["title"])
+      names_from_description = name_parser.parse(hash["description"])
+      (names_from_title & names_from_description)
+    end
+
+    def name_parser
+      @name_parser ||= Podcasts::NameParser.new
+    end
+    
+    def sanitized_podcast_hash(hash)
+      {
+        "podcast" => hash["podcast"],
+        "title" => hash["title"],
+        "link" => hash["link"]
+      }
     end
   end
 end

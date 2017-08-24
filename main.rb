@@ -30,7 +30,7 @@ def index
   @index = {}
 
   @sources.each do |source|
-    Podcasts::Indexer.index!(@data, source).each do |name, results|
+    Podcasts::Indexer.index!(source).each do |name, results|
       @index[name] ||= []
       @index[name] += results
     end
