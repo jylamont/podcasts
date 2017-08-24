@@ -1,10 +1,11 @@
 require 'optparse'
 require 'pstore'
+require 'erb'
 require './lib/podcasts'
 
 @options = {}
 @pstore_path = "data.pstore"
-@data = PStore.new(@pstore_path)
+@db = PStore.new(@pstore_path)
 @sources = []
 
 def parse_args!
@@ -21,6 +22,10 @@ def parse_args!
   
     parser.on("-i", "--ignore-author", "Ignore results where the podcaster is the author.") do |v|
       @options[:ignore_author] = true
+    end
+
+    parser.on("-r", "--reindex", "Re-index sources for faster querying") do 
+      @options[:index] = true
     end
 
     parser.on("-s", "--sources", "Print sources.") do
@@ -51,8 +56,8 @@ def clean_sources(sources)
 end
 
 def load_data!
-  @data.transaction do 
-    @sources = clean_sources(@data[:sources] || []).map do |h| 
+  @db.transaction do 
+    @sources = clean_sources(@db[:sources] || []).map do |h| 
       Podcasts::Source.from_h(h)
     end
   end
@@ -63,9 +68,28 @@ def modify_sources!
     @sources << Podcasts::Source.parse(url)
   end
 
-  @data.transaction do 
-    @data[:sources] = clean_sources(@sources).map(&:to_h)
+  @db.transaction do 
+    @db[:sources] = clean_sources(@sources).map(&:to_h)
   end
+end
+
+def index
+  @index = {}
+
+  @sources.each do |source|
+    Podcasts::Indexer.index!(@data, source).each do |name, results|
+      @index[name] ||= []
+      @index[name] += results
+    end
+  end
+
+  b = binding
+  lib_folder = File.expand_path(File.dirname(__FILE__), "lib")
+  path = "#{lib_folder}/index.html.erb"
+  text = File.open(path).read
+  text = ERB.new(text).result(b)
+
+  File.write("/tmp/test.html", text)
 end
 
 def search_for_podcaster
@@ -81,5 +105,7 @@ end
 
 load_data!
 parse_args!
+
 modify_sources! if @options[:sources]
+index if @options[:index]
 search_for_podcaster if @options[:find]

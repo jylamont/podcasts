@@ -3,13 +3,19 @@ GEM
   specs:
     domain_name (0.5.20160310)
       unf (>= 0.0.5, < 1.0.0)
+    engtagger (0.2.1)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
+    loofah (2.0.3)
+      nokogiri (>= 1.5.9)
     mime-types (2.99.3)
     mini_portile2 (2.1.0)
+    namae (0.11.3)
     netrc (0.11.0)
     nokogiri (1.6.8.1)
       mini_portile2 (~> 2.1.0)
+    rails-html-sanitizer (1.0.3)
+      loofah (~> 2.0)
     rest-client (1.8.0)
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
@@ -22,7 +28,10 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  engtagger
+  namae
   nokogiri
+  rails-html-sanitizer
   rest-client
 
 BUNDLED WITH

@@ -1,5 +1,7 @@
 require 'json'
 require 'restclient'
+require 'nokogiri'
+require 'rails-html-sanitizer'
 
 module Podcasts
   class Source
@@ -30,6 +32,19 @@ module Podcasts
           "url" => lookup["feedUrl"]
         )
       end
+    end
+
+    def podcasts
+      data = RestClient.get(self.url)
+      
+      Nokogiri(data).xpath("//item").map do |node|
+        {
+          "podcast" => self.name,
+          "title" => node.at_xpath("title").text,
+          "description" => Rails::Html::FullSanitizer.new.sanitize(node.at_xpath("description").text),
+          "link" => node.at_xpath("link").text
+        }
+      end.reject(&:empty?)
     end
 
     def to_h
