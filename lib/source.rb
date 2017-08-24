@@ -35,16 +35,18 @@ module Podcasts
     end
 
     def podcasts
-      data = RestClient.get(self.url)
-      
-      Nokogiri(data).xpath("//item").map do |node|
-        {
-          "podcast" => self.name,
-          "title" => node.at_xpath("title").text,
-          "description" => Rails::Html::FullSanitizer.new.sanitize(node.at_xpath("description").text),
-          "link" => node.at_xpath("link").text
-        }
-      end.reject(&:empty?)
+      @podcasts ||= begin
+        data = RestClient.get(self.url)
+        
+        Nokogiri(data).xpath("//item").map do |node|
+          {
+            "podcast" => self.name,
+            "title" => node.at_xpath("title").text,
+            "description" => Rails::Html::FullSanitizer.new.sanitize(node.at_xpath("description").text),
+            "link" => node.at_xpath("link").text
+          }
+        end.reject(&:empty?)
+      end
     end
 
     def to_h

@@ -31,7 +31,7 @@ module Podcasts
       result = block.call
       t2 = Time.now
 
-      puts "#{source.name}: Time = #{(t2 - t1).to_f}"
+      puts "Indexed #{source.podcasts.size} podcasts for #{source.name} in #{(t2 - t1).to_f}s"
       result
     end
 
