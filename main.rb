@@ -1,24 +1,20 @@
 require 'optparse'
-require 'pstore'
-
 require './lib/podcasts'
 
 @options = {}
-@pstore_path = "data.pstore"
-@db = PStore.new(@pstore_path)
+@db = Podcasts::DB.default
 @sources = []
 
-def clean_sources(sources)
-  sources.reject do |obj|
+def clean_sources
+  @sources.reject do |obj|
     obj.nil? || (obj.empty? if obj.respond_to?(:empty?))
   end.uniq
 end
 
 def load_data!
-  @db.transaction do 
-    @sources = clean_sources(@db[:sources] || []).map do |h| 
-      Podcasts::Source.from_h(h)
-    end
+  @sources = @db.fetch(:sources) { [] }
+  @sources = clean_sources.map do |h| 
+    Podcasts::Source.from_h(h)
   end
 end
 
@@ -27,9 +23,7 @@ def modify_sources!
     @sources << Podcasts::Source.parse(url)
   end
 
-  @db.transaction do 
-    @db[:sources] = clean_sources(@sources).map(&:to_h)
-  end
+  @db.set(:sources, clean_sources.map(&:to_h))
 end
 
 def index
@@ -42,16 +36,17 @@ def index
     end
   end
 
-  @db.transaction do 
-    @db[:index] = @index
-  end
+  @db.set(:index, @index)
 end
 
 def search_for_podcaster
-  @db.transaction { @db[:index][@options[:find]] }.flatten.reject(&:empty?).each do |result|
-    result.each do |k,v|
-      puts "#{k.capitalize}: #{v}"
-    end
+  results = @db.find(:index)
+    .fetch(@options[:find], [])
+    .flatten
+    .reject(&:empty?)
+
+  results.each do |result|
+    result.each { |k,v| puts "#{k.capitalize}: #{v}" }
     puts ""
   end
 end
