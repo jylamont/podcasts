@@ -5,5 +5,6 @@ module Podcasts
   require_relative 'db'
   require_relative 'indexer'
   require_relative 'name_parser'
+  require_relative 'parallel_indexer'
   require_relative 'source'
 end

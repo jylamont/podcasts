@@ -27,6 +27,8 @@ module Podcasts
     private
 
     def bm(source, &block)
+      puts "Starting indexing for #{source.name}..."
+    
       t1 = Time.now
       result = block.call
       t2 = Time.now

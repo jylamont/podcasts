@@ -27,16 +27,7 @@ def modify_sources!
 end
 
 def index
-  @index = {}
-
-  @sources.each do |source|
-    Podcasts::Indexer.index!(source).each do |name, results|
-      @index[name] ||= []
-      @index[name] += results
-    end
-  end
-
-  @db.set(:index, @index)
+  @db.set(:index, Podcasts::ParallelIndexer.index(@sources))
 end
 
 def search_for_podcaster
