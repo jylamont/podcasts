@@ -3,7 +3,6 @@ module Podcasts
 
   require_relative 'source'
   require_relative 'indexer'
-  require_relative 'find_podcaster'
   require_relative 'name_parser'
   require_relative 'cli_args_parser'
 end
