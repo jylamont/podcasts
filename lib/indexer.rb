@@ -12,11 +12,20 @@ module Podcasts
         names_from_title = name_parser.parse(hash["title"])
         names_from_description = name_parser.parse(hash["description"])
         index_names = (names_from_title & names_from_description)
-        
-        index_names.each do |name| 
-          index[name] ||= []
-          index[name] << hash
-        end
+
+        unless index_names.empty?
+          new_hash = {
+            "podcast" => hash["podcast"],
+            "title" => hash["title"],
+            "link" => hash["link"]
+          }
+
+          index_names.each do |name|  
+            key = name.to_s
+            index[key] ||= []
+            index[key] << new_hash
+          end
+        end        
       end
 
       t2 = Time.now
